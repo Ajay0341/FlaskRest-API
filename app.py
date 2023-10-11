@@ -7,9 +7,8 @@ from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
-# Configure MongoDB connection
-client = MongoClient("mongodb+srv://restfulapi:NJN6nL7YpbfbitRP@cluster0.u6zpvfy.mongodb.net/")
-# db = client["restAPI"]
+# Set the MongoDB URI in Flask's configuration
+app.config['MONGO_URI'] = "mongodb+srv://restfulapi:NJN6nL7YpbfbitRP@cluster0.u6zpvfy.mongodb.net/"
 mongo = PyMongo(app)
 
 # Configure JWT
