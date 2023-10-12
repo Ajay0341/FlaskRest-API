@@ -7,51 +7,57 @@ from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
-# Set the MongoDB URI in Flask's configuration
-app.config['MONGO_URI'] = "mongodb+srv://restfulapi:NJN6nL7YpbfbitRP@cluster0.u6zpvfy.mongodb.net/"
+# Configure the MongoDB URI
+app.config['MONGO_URI'] = "mongodb+srv://restfulapi:ZvDo9XBuPkpVVTZi@cluster0.u6zpvfy.mongodb.net/"
+
+# Initialize the PyMongo extension
 mongo = PyMongo(app)
 
 # Configure JWT
 app.config['SECRET_KEY'] = '385ff4c74e83c02d41aeb7031f47bd69'
 jwt = JWTManager(app)
 
-# Endpoint for user registration
+# Registration Endpoint
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
+
+    if not data:
+        return jsonify({'message': 'No data provided'}), 400
+
     # Check if email already exists in the database
     existing_user = mongo.db.users.find_one({'email': data['email']})
     if existing_user:
         return jsonify({'message': 'Email already exists'}), 400
-    
+
     # Hash the password before storing it
-    hashed_password = generate_password_hash(data['password'], method='sha256')
-    
+    hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256')
+
     # Insert the new user into the database
-    user_id = mongo.db.users.insert({
+    user_id = mongo.db.users.insert_one({
         'first_name': data['first_name'],
         'last_name': data['last_name'],
         'email': data['email'],
         'password': hashed_password
-    })
-    
-    return jsonify({'message': 'User registered successfully'}), 201
+    }).inserted_id
 
-# Endpoint for user login
+    return jsonify({'message': 'User registered successfully', 'user_id': str(user_id)}), 201
+
+# User Login Endpoint
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     user = mongo.db.users.find_one({'email': data['email']})
-    
+
     if not user or not check_password_hash(user['password'], data['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
-    
+
     # Create an access token using JWT
     access_token = create_access_token(identity=str(user['_id']))
-    
+
     return jsonify({'access_token': access_token}), 200
 
-# Template CRUD endpoints
+# Template CRUD Endpoints
 @app.route('/template', methods=['POST'])
 @jwt_required()
 def create_template():
@@ -111,4 +117,3 @@ def delete_template(template_id):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
