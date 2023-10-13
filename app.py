@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 app = Flask(__name__)
 
 # Configure the MongoDB URI
-app.config['MONGO_URI'] = "mongodb+srv://restfulapi:ZvDo9XBuPkpVVTZi@cluster0.u6zpvfy.mongodb.net/"
+app.config['MONGO_URI'] = "mongodb+srv://restfulapi:ZvDo9XBuPkpVVTZi@cluster0.u6zpvfy.mongodb.net/restAPI"
 
 # Initialize the PyMongo extension
 mongo = PyMongo(app)
@@ -77,7 +77,11 @@ def create_template():
 def get_all_templates():
     current_user_id = get_jwt_identity()
     templates = list(mongo.db.templates.find({'user_id': current_user_id}, {'user_id': 0}))
-    return jsonify({'templates': templates}), 200
+    serialized_templates = []
+    for template in templates:
+        template['_id'] = str(template['_id'])  # Convert ObjectId to string
+        serialized_templates.append(template)
+    return jsonify({'templates': serialized_templates}), 200
 
 @app.route('/template/<template_id>', methods=['GET'])
 @jwt_required()
@@ -85,10 +89,11 @@ def get_template(template_id):
     current_user_id = get_jwt_identity()
     template = mongo.db.templates.find_one({'_id': ObjectId(template_id), 'user_id': current_user_id}, {'user_id': 0})
     if template:
+        template['_id'] = str(template['_id'])  # Convert ObjectId to a string
         return jsonify({'template': template}), 200
     else:
         return jsonify({'message': 'Template not found'}), 404
-
+    
 @app.route('/template/<template_id>', methods=['PUT'])
 @jwt_required()
 def update_template(template_id):
