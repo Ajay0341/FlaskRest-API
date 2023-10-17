@@ -4,11 +4,13 @@ from flask_pymongo import PyMongo
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from bson.objectid import ObjectId
+from pymongo.server_api import ServerApi
 
 app = Flask(__name__)
 
 # Configure the MongoDB URI
-app.config['MONGO_URI'] = "mongodb+srv://restfulapi:ZvDo9XBuPkpVVTZi@cluster0.u6zpvfy.mongodb.net/restAPI"
+uri = 'mongodb+srv://restfulapi:ZvDo9XBuPkpVVTZi@cluster0.u6zpvfy.mongodb.net/restAPI?retryWrites=true&w=majority'
+app.config['MONGO_URI'] = uri
 
 # Initialize the PyMongo extension
 mongo = PyMongo(app)
@@ -16,6 +18,26 @@ mongo = PyMongo(app)
 # Configure JWT
 app.config['SECRET_KEY'] = '385ff4c74e83c02d41aeb7031f47bd69'
 jwt = JWTManager(app)
+
+
+
+def check_mongo_connection(uri):
+    try:
+        client = MongoClient(uri, server_api=ServerApi('1'))
+        # Send a ping to confirm a successful connection
+        client.admin.command('ping')
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+@app.route('/check_mongo_connection', methods=['GET'])
+def test_mongo_connection():
+    if check_mongo_connection(uri):
+        return jsonify({"message": "Pinged your deployment. You successfully connected to MongoDB!"})
+    else:
+        return jsonify({"message": "sorry, Unable to connect to MongoDB"})
+
 
 # Registration Endpoint
 @app.route('/register', methods=['POST'])
@@ -93,7 +115,7 @@ def get_template(template_id):
         return jsonify({'template': template}), 200
     else:
         return jsonify({'message': 'Template not found'}), 404
-    
+
 @app.route('/template/<template_id>', methods=['PUT'])
 @jwt_required()
 def update_template(template_id):
@@ -121,4 +143,4 @@ def delete_template(template_id):
         return jsonify({'message': 'Template not found or you do not have permission to delete'}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
