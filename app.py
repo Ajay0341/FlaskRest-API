@@ -143,4 +143,4 @@ def delete_template(template_id):
         return jsonify({'message': 'Template not found or you do not have permission to delete'}), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='16.171.206.89', port=5000)
