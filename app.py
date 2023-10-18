@@ -19,7 +19,7 @@ mongo = PyMongo(app)
 app.config['SECRET_KEY'] = '385ff4c74e83c02d41aeb7031f47bd69'
 jwt = JWTManager(app)
 
-
+client = MongoClient(uri, connectTimeoutMS=30000, socketTimeoutMS=None, socketKeepAlive=True, connect=False, maxPoolsize=1)
 
 def check_mongo_connection(uri):
     try:
@@ -164,4 +164,4 @@ def delete_template(template_id):
         return jsonify({'message': 'Template not found or you do not have permission to delete'}), 404
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',debug=True)
+    app.run()
