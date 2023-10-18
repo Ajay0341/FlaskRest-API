@@ -38,7 +38,7 @@ def test_mongo_connection():
     else:
         return jsonify({"message": "sorry, Unable to connect to MongoDB"})
 
-@app.route('/home', methods=['GET'])
+@app.route('/', methods=['GET'])
 def home():
     return jsonify({"homepage": "welcome"})
 
